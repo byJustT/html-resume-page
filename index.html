@@ -1043,60 +1043,6 @@
       padding: .35rem .55rem;
     }
 
-    .edit-toggle {
-      position: fixed;
-      left: 14px;
-      top: 14px;
-      z-index: 100;
-      border: 1px solid var(--bit-green);
-      background: rgba(255,255,255,.86);
-      color: var(--bit-green);
-      padding: .42rem .65rem;
-      font: inherit;
-      font-size: var(--small-size);
-      font-weight: 900;
-      cursor: pointer;
-      opacity: .12;
-      transition: opacity .2s ease, background .2s ease, color .2s ease;
-    }
-
-    .edit-toggle:hover,
-    body.editing .edit-toggle {
-      opacity: 1;
-    }
-
-    body.editing .edit-toggle {
-      background: var(--bit-brown);
-      border-color: var(--bit-brown);
-      color: white;
-    }
-
-    body.editing [contenteditable="true"] {
-      outline: 2px dashed rgba(159,63,11,.45);
-      outline-offset: 3px;
-      cursor: text;
-    }
-
-    .save-toast {
-      position: fixed;
-      left: 14px;
-      top: 56px;
-      z-index: 100;
-      padding: .42rem .65rem;
-      background: var(--bit-dark);
-      color: white;
-      font-size: var(--small-size);
-      font-weight: 800;
-      opacity: 0;
-      transform: translateY(-6px);
-      pointer-events: none;
-      transition: opacity .2s ease, transform .2s ease;
-    }
-
-    .save-toast.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
 
     .reveal {
       opacity: 0;
@@ -1120,10 +1066,8 @@
 </head>
 <body>
   <div class="progress-bar" aria-hidden="true"></div>
-  <button class="edit-toggle" type="button" aria-pressed="false">编辑 E</button>
-  <div class="save-toast" role="status" aria-live="polite">已保存</div>
-  <nav class="nav-dots" aria-label="幻灯片导航"></nav>
-  <div class="keyboard-hint">方向键 / 空格 / 滚轮切换页面 · E 编辑 · Ctrl+S 保存</div>
+<nav class="nav-dots" aria-label="幻灯片导航"></nav>
+  <div class="keyboard-hint">方向键 / 空格 / 滚轮切换页面</div>
 
   <section class="slide cover" data-title="封面">
     <div class="slide-content">
@@ -1692,87 +1636,6 @@
 
     new SlidePresentation();
 
-    /* ===========================================
-       INLINE EDITING
-       Press E to edit visible text. Ctrl+S stores edits in localStorage.
-       =========================================== */
-    class InlineEditor {
-      constructor() {
-        this.storageKey = "resume-bit-optimized-edits-v2";
-        this.editButton = document.querySelector(".edit-toggle");
-        this.toast = document.querySelector(".save-toast");
-        this.editables = Array.from(document.querySelectorAll(
-          "h1, h2, h3, p, li, .tag, .kicker, .metric span, .metric strong, .edu-metric strong, .edu-metric span, .side-fact span, .ability-item b, .ability-item span, .caption, .date"
-        ));
-        this.editables.forEach((node, index) => {
-          node.dataset.editId = `edit-${index}`;
-        });
-        this.restore();
-        this.bind();
-      }
-
-      bind() {
-        this.editButton.addEventListener("click", () => this.toggle());
-        document.addEventListener("keydown", (event) => {
-          if (event.key.toLowerCase() === "e" && !event.ctrlKey && !event.metaKey && !event.altKey) {
-            const active = document.activeElement;
-            if (active && active.isContentEditable) return;
-            event.preventDefault();
-            this.toggle();
-          }
-          if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
-            event.preventDefault();
-            this.save();
-          }
-          if (event.key === "Escape" && document.body.classList.contains("editing")) {
-            this.toggle(false);
-          }
-        });
-      }
-
-      toggle(force) {
-        const next = typeof force === "boolean" ? force : !document.body.classList.contains("editing");
-        document.body.classList.toggle("editing", next);
-        this.editButton.setAttribute("aria-pressed", String(next));
-        this.editButton.textContent = next ? "退出编辑" : "编辑 E";
-        this.editables.forEach((node) => {
-          node.contentEditable = next ? "true" : "false";
-          node.spellcheck = false;
-        });
-      }
-
-      save() {
-        const payload = {};
-        this.editables.forEach((node) => {
-          payload[node.dataset.editId] = node.innerHTML;
-        });
-        localStorage.setItem(this.storageKey, JSON.stringify(payload));
-        this.showToast("已保存到本地缓存");
-      }
-
-      restore() {
-        const raw = localStorage.getItem(this.storageKey);
-        if (!raw) return;
-        try {
-          const payload = JSON.parse(raw);
-          this.editables.forEach((node) => {
-            const value = payload[node.dataset.editId];
-            if (typeof value === "string") node.innerHTML = value;
-          });
-        } catch {
-          localStorage.removeItem(this.storageKey);
-        }
-      }
-
-      showToast(text) {
-        this.toast.textContent = text;
-        this.toast.classList.add("show");
-        window.clearTimeout(this.toastTimer);
-        this.toastTimer = window.setTimeout(() => this.toast.classList.remove("show"), 1500);
-      }
-    }
-
-    new InlineEditor();
   </script>
 </body>
 </html>
